@@ -47,6 +47,8 @@ const APPS: App[] = [
   { id: 28, name: 'Twitter (X)', icon: 'Twitter', category: 'Социальные', downloads: '500 млн' },
   { id: 29, name: 'LinkedIn', icon: 'Briefcase', category: 'Бизнес', downloads: '900 млн' },
   { id: 30, name: 'Snapchat', icon: 'Camera', category: 'Социальные', downloads: '750 млн' },
+  { id: 31, name: 'Roblox', icon: 'Box', category: 'Игры', downloads: '450 млн' },
+  { id: 32, name: 'Max (HBO Max)', icon: 'Film', category: 'Видео', downloads: '300 млн' },
 ];
 
 export default function Index() {
@@ -59,6 +61,8 @@ export default function Index() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showBlockAnimation, setShowBlockAnimation] = useState(false);
   const [animatingAppId, setAnimatingAppId] = useState<number | null>(null);
+  const [showBlockedError, setShowBlockedError] = useState(false);
+  const [errorApp, setErrorApp] = useState<App | null>(null);
 
   const handleAppClick = (app: App) => {
     if (blockedApps.includes(app.id)) {
@@ -97,6 +101,15 @@ export default function Index() {
     setBlockedApps(blockedApps.filter(id => id !== appId));
     if (app) {
       toast.info(`${app.name} разблокирован`);
+    }
+  };
+
+  const handleInstallClick = (app: App) => {
+    if (blockedApps.includes(app.id)) {
+      setErrorApp(app);
+      setShowBlockedError(true);
+    } else {
+      toast.success(`Установка ${app.name} началась`);
     }
   };
 
@@ -379,7 +392,7 @@ export default function Index() {
                   </div>
                 )}
 
-                {availableApps.length === 0 ? (
+{availableApps.length === 0 ? (
                   <div className="text-center py-16">
                     <Icon name="Ban" size={64} className="mx-auto mb-4 text-destructive" />
                     <p className="text-xl font-bold text-muted-foreground">
@@ -391,24 +404,47 @@ export default function Index() {
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {availableApps.map((app) => (
+                    {APPS.map((app) => (
                       <Card
                         key={app.id}
-                        className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1"
+                        className={`transition-all ${
+                          blockedApps.includes(app.id)
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'hover:shadow-lg cursor-pointer hover:-translate-y-1'
+                        }`}
                       >
                         <CardContent className="p-5">
                           <div className="flex items-start gap-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              blockedApps.includes(app.id)
+                                ? 'bg-gray-400'
+                                : 'bg-gradient-to-br from-green-600 to-blue-600'
+                            }`}>
                               <Icon name={app.icon} size={28} className="text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-bold text-lg mb-1 truncate">{app.name}</h3>
                               <p className="text-sm text-muted-foreground">{app.category}</p>
                               <p className="text-xs text-muted-foreground mt-1">{app.downloads}</p>
-                              <Button size="sm" className="mt-3 w-full bg-green-600 hover:bg-green-700 font-bold">
-                                <Icon name="Download" size={16} className="mr-1" />
-                                Установить
-                              </Button>
+                              {blockedApps.includes(app.id) ? (
+                                <Button 
+                                  size="sm" 
+                                  className="mt-3 w-full bg-gray-400 cursor-not-allowed font-bold"
+                                  onClick={() => handleInstallClick(app)}
+                                >
+                                  <Icon name="Ban" size={16} className="mr-1" />
+                                  Заблокировано
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  className="mt-3 w-full bg-green-600 hover:bg-green-700 font-bold"
+                                  onClick={() => handleInstallClick(app)}
+                                >
+                                  <Icon name="Download" size={16} className="mr-1" />
+                                  Установить
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -485,6 +521,57 @@ export default function Index() {
           </div>
         </div>
       )}
+
+      <Dialog open={showBlockedError} onOpenChange={setShowBlockedError}>
+        <DialogContent className="sm:max-w-md border-4 border-destructive">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-destructive flex items-center gap-2">
+              <Icon name="ShieldX" size={32} />
+              Ошибка установки
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Невозможно установить приложение
+            </DialogDescription>
+          </DialogHeader>
+          {errorApp && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-red-50 rounded-lg border-2 border-destructive">
+                <div className="w-16 h-16 bg-destructive rounded-xl flex items-center justify-center">
+                  <Icon name={errorApp.icon} size={32} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl">{errorApp.name}</h3>
+                  <p className="text-sm text-muted-foreground">{errorApp.category}</p>
+                </div>
+              </div>
+              <div className="bg-destructive/10 p-4 rounded-lg border-l-4 border-destructive">
+                <div className="flex gap-3">
+                  <Icon name="AlertCircle" className="text-destructive flex-shrink-0 mt-1" size={24} />
+                  <div>
+                    <p className="font-bold text-destructive text-lg">ПРИЛОЖЕНИЕ ЗАБЛОКИРОВАНО</p>
+                    <p className="text-sm mt-2">
+                      Данное приложение заблокировано Роскомнадзором на территории Российской Федерации.
+                    </p>
+                    <p className="text-sm mt-2 font-medium">
+                      Установка и использование невозможны по решению регулятора.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={() => setShowBlockedError(false)}
+              className="w-full font-bold"
+            >
+              <Icon name="X" size={18} className="mr-2" />
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
