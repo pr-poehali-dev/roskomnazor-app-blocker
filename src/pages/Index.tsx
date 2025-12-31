@@ -27,6 +27,26 @@ const APPS: App[] = [
   { id: 8, name: 'Telegram', icon: 'Send', category: 'Общение', downloads: '800 млн' },
   { id: 9, name: 'VK', icon: 'Users', category: 'Социальные', downloads: '300 млн' },
   { id: 10, name: 'YouTube', icon: 'Play', category: 'Видео', downloads: '4 млрд' },
+  { id: 11, name: 'TikTok', icon: 'Music', category: 'Видео', downloads: '3.5 млрд' },
+  { id: 12, name: 'Instagram', icon: 'Instagram', category: 'Социальные', downloads: '2.5 млрд' },
+  { id: 13, name: 'Facebook', icon: 'Facebook', category: 'Социальные', downloads: '3 млрд' },
+  { id: 14, name: 'Spotify', icon: 'Music', category: 'Музыка', downloads: '600 млн' },
+  { id: 15, name: 'Netflix', icon: 'Tv', category: 'Видео', downloads: '800 млн' },
+  { id: 16, name: 'Amazon', icon: 'Package', category: 'Покупки', downloads: '1 млрд' },
+  { id: 17, name: 'Uber', icon: 'Car', category: 'Транспорт', downloads: '500 млн' },
+  { id: 18, name: 'Яндекс.Такси', icon: 'Car', category: 'Транспорт', downloads: '100 млн' },
+  { id: 19, name: 'Сбербанк', icon: 'CreditCard', category: 'Финансы', downloads: '200 млн' },
+  { id: 20, name: 'Тинькофф', icon: 'Wallet', category: 'Финансы', downloads: '150 млн' },
+  { id: 21, name: 'Avito', icon: 'Store', category: 'Покупки', downloads: '80 млн' },
+  { id: 22, name: 'Ozon', icon: 'ShoppingBag', category: 'Покупки', downloads: '70 млн' },
+  { id: 23, name: 'Wildberries', icon: 'ShoppingBasket', category: 'Покупки', downloads: '90 млн' },
+  { id: 24, name: 'Яндекс', icon: 'Search', category: 'Поиск', downloads: '250 млн' },
+  { id: 25, name: 'Discord', icon: 'MessageSquare', category: 'Общение', downloads: '400 млн' },
+  { id: 26, name: 'Zoom', icon: 'Video', category: 'Бизнес', downloads: '600 млн' },
+  { id: 27, name: 'Viber', icon: 'Phone', category: 'Общение', downloads: '1.2 млрд' },
+  { id: 28, name: 'Twitter (X)', icon: 'Twitter', category: 'Социальные', downloads: '500 млн' },
+  { id: 29, name: 'LinkedIn', icon: 'Briefcase', category: 'Бизнес', downloads: '900 млн' },
+  { id: 30, name: 'Snapchat', icon: 'Camera', category: 'Социальные', downloads: '750 млн' },
 ];
 
 export default function Index() {
@@ -37,6 +57,8 @@ export default function Index() {
   const [showDialog, setShowDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showBlockAnimation, setShowBlockAnimation] = useState(false);
+  const [animatingAppId, setAnimatingAppId] = useState<number | null>(null);
 
   const handleAppClick = (app: App) => {
     if (blockedApps.includes(app.id)) {
@@ -49,16 +71,24 @@ export default function Index() {
 
   const handleBlock = () => {
     if (selectedApp) {
-      setBlockedApps([...blockedApps, selectedApp.id]);
-      setBlockHistory([
-        { appName: selectedApp.name, timestamp: new Date() },
-        ...blockHistory,
-      ]);
-      toast.success(`${selectedApp.name} заблокирован`);
       setShowDialog(false);
+      setAnimatingAppId(selectedApp.id);
+      setShowBlockAnimation(true);
+      
       setTimeout(() => {
-        setActiveTab('playmarket');
-      }, 500);
+        setBlockedApps([...blockedApps, selectedApp.id]);
+        setBlockHistory([
+          { appName: selectedApp.name, timestamp: new Date() },
+          ...blockHistory,
+        ]);
+        toast.success(`${selectedApp.name} заблокирован`);
+        setShowBlockAnimation(false);
+        setAnimatingAppId(null);
+        
+        setTimeout(() => {
+          setActiveTab('playmarket');
+        }, 500);
+      }, 5000);
     }
   };
 
@@ -442,6 +472,19 @@ export default function Index() {
           <p className="text-sm opacity-80 mt-2">© 2025 Роскомнадзор. Все права защищены.</p>
         </div>
       </footer>
+
+      {showBlockAnimation && selectedApp && (
+        <div className="block-animation-overlay">
+          <div className="text-center">
+            <div className="x-mark mb-8"></div>
+            <div className="text-white">
+              <h2 className="text-4xl font-black mb-4">БЛОКИРОВКА</h2>
+              <p className="text-2xl font-bold">{selectedApp.name}</p>
+              <p className="text-lg mt-2 opacity-90">Приложение заблокировано</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
