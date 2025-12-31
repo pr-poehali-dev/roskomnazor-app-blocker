@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,14 @@ interface App {
   icon: string;
   category: string;
   downloads: string;
+}
+
+interface ChatMessage {
+  id: number;
+  author: string;
+  message: string;
+  timestamp: Date;
+  avatar: string;
 }
 
 const APPS: App[] = [
@@ -63,6 +71,59 @@ export default function Index() {
   const [animatingAppId, setAnimatingAppId] = useState<number | null>(null);
   const [showBlockedError, setShowBlockedError] = useState(false);
   const [errorApp, setErrorApp] = useState<App | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [showChat, setShowChat] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const userNames = [
+    'Александр К.', 'Мария П.', 'Дмитрий В.', 'Анна С.', 'Иван М.',
+    'Елена Р.', 'Сергей Л.', 'Ольга Н.', 'Андрей Т.', 'Наталья Ж.',
+    'Михаил Б.', 'Татьяна Д.', 'Алексей Г.', 'Светлана К.', 'Павел Ш.'
+  ];
+
+  const complaintMessages = [
+    'Верните приложение! Оно мне нужно для работы!',
+    'Почему заблокировали? Это несправедливо!',
+    'Я требую разблокировать приложение немедленно!',
+    'Верните доступ! Без этого приложения никак!',
+    'Это нарушение моих прав! Разблокируйте!',
+    'Прошу вернуть приложение, очень нужно!',
+    'Где мое приложение? Верните обратно!',
+    'Незаконная блокировка! Требую вернуть!',
+    'Пожалуйста, разблокируйте! Очень важно!',
+    'Верните приложение, это катастрофа!',
+    'Почему так? Верните доступ пожалуйста!',
+    'Я против блокировки! Верните приложение!',
+    'Это ужасно! Разблокируйте немедленно!',
+    'Требую объяснений! Верните приложение!',
+    'Не могу без этого приложения! Верните!'
+  ];
+
+  useEffect(() => {
+    if (blockedApps.length > 0) {
+      const interval = setInterval(() => {
+        const randomName = userNames[Math.floor(Math.random() * userNames.length)];
+        const randomMessage = complaintMessages[Math.floor(Math.random() * complaintMessages.length)];
+        const randomApp = APPS.find(app => blockedApps.includes(app.id));
+        
+        const newMessage: ChatMessage = {
+          id: Date.now(),
+          author: randomName,
+          message: randomApp ? `${randomMessage} (${randomApp.name})` : randomMessage,
+          timestamp: new Date(),
+          avatar: randomName.charAt(0)
+        };
+        
+        setChatMessages(prev => [...prev, newMessage].slice(-50));
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [blockedApps]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   const handleAppClick = (app: App) => {
     if (blockedApps.includes(app.id)) {
@@ -137,10 +198,25 @@ export default function Index() {
                 <p className="text-sm opacity-90 font-medium">Федеральная служба по надзору в сфере связи</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Badge variant="destructive" className="px-4 py-2 text-sm font-bold">
                 ОФИЦИАЛЬНО
               </Badge>
+              {blockedApps.length > 0 && (
+                <Button
+                  onClick={() => setShowChat(!showChat)}
+                  variant="outline"
+                  className="relative font-bold"
+                >
+                  <Icon name="MessageSquare" size={20} className="mr-2" />
+                  Обращения ({chatMessages.length})
+                  {chatMessages.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                      !
+                    </span>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>
